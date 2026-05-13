@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>迁移学习与农业图像识别 — 综合实验报告</title>
+<style>
+/* ===== Typography ===== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --npg-red: #E64B35;
+  --npg-blue: #4DBBD5;
+  --npg-green: #00A087;
+  --npg-navy: #3C5488;
+  --lancet-blue: #00468B;
+  --lancet-red: #ED0000;
+  --jama-dark: #374E55;
+  --jama-orange: #DF8F44;
+  --science-blue: #0072B2;
+  --science-orange: #D55E00;
+  --science-green: #009E73;
+  --bg: #FAFBFC;
+  --text: #2C3E50;
+  --text-light: #5D6D7E;
+  --border: #E5E7EB;
+  --card-bg: #FFFFFF;
+  --accent: #2166AC;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== Header ===== */
+.hero {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  color: white;
+  padding: 60px 40px 50px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%; width: 200%; height: 200%;
+  background: radial-gradient(ellipse at 30% 70%, rgba(230,75,53,0.15) 0%, transparent 50%),
+              radial-gradient(ellipse at 70% 30%, rgba(77,187,213,0.15) 0%, transparent 50%);
+}
+.hero h1 {
+  font-size: 2.4em; font-weight: 700;
+  position: relative; z-index: 1;
+  letter-spacing: -0.02em;
+}
+.hero .subtitle {
+  font-size: 1.1em; font-weight: 300;
+  opacity: 0.85; margin-top: 12px;
+  position: relative; z-index: 1;
+}
+.hero .meta {
+  margin-top: 24px; font-size: 0.9em;
+  opacity: 0.7; position: relative; z-index: 1;
+}
+
+/* ===== Container ===== */
+.container { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+
+/* ===== Cards ===== */
+.card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 32px 36px;
+  margin-bottom: 28px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  border: 1px solid var(--border);
+}
+
+.card h2 {
+  font-size: 1.5em; font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--border);
+}
+
+.card h3 {
+  font-size: 1.15em; font-weight: 600;
+  margin: 20px 0 10px;
+  color: #34495E;
+}
+
+.card p, .card li { color: var(--text-light); }
+.card ul { padding-left: 20px; margin: 8px 0; }
+
+/* ===== Metrics Grid ===== */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.metric {
+  background: linear-gradient(135deg, #f8f9fa 0%, #f0f1f3 100%);
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  border: 1px solid var(--border);
+}
+
+.metric .value {
+  font-size: 2em; font-weight: 700;
+  background: linear-gradient(135deg, var(--accent), #4DAF4A);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.metric .label {
+  font-size: 0.85em; color: var(--text-light);
+  margin-top: 4px;
+}
+
+/* ===== Comparison Tables ===== */
+table {
+  width: 100%; border-collapse: collapse;
+  margin: 16px 0; font-size: 0.95em;
+}
+th {
+  background: #f0f1f3;
+  padding: 10px 14px; text-align: left;
+  font-weight: 600; color: var(--text);
+  border-bottom: 2px solid #d0d3d7;
+}
+td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-light);
+}
+tr:hover td { background: #fafbfc; }
+.highlight { color: var(--npg-red); font-weight: 600; }
+
+/* ===== Figures ===== */
+.figure {
+  margin: 24px 0;
+  text-align: center;
+}
+.figure img {
+  max-width: 100%; height: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border: 1px solid var(--border);
+}
+.figure .caption {
+  margin-top: 10px;
+  font-size: 0.9em; color: var(--text-light);
+  font-style: italic;
+}
+
+/* ===== Conclusion Box ===== */
+.conclusion {
+  background: linear-gradient(135deg, #f0f7ff 0%, #e8f4f8 100%);
+  border-left: 4px solid var(--npg-navy);
+  padding: 24px; border-radius: 0 8px 8px 0;
+  margin: 20px 0;
+}
+
+/* ===== Footer ===== */
+.footer {
+  text-align: center; padding: 30px;
+  color: var(--text-light); font-size: 0.85em;
+  border-top: 1px solid var(--border);
+  margin-top: 40px;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .hero { padding: 40px 20px; }
+  .hero h1 { font-size: 1.6em; }
+  .container { padding: 20px 12px; }
+  .card { padding: 20px 16px; }
+  .metrics { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== HERO ===== -->
+<header class="hero">
+  <h1>迁移学习与农业图像识别</h1>
+  <div class="subtitle">基于 PlantVillage 数据集的番茄叶片病害分类 — 综合实验报告</div>
+  <div class="meta">PyTorch · ResNet18 · MobileNetV2 · Transfer Learning · Fine-tuning · 2026-05</div>
+</header>
+
+<div class="container">
+
+<!-- ===== 1. 概述 ===== -->
+<section class="card">
+  <h2>1. 实验概述</h2>
+  <p>本实验使用 <strong>PlantVillage 番茄叶片数据集</strong>（6,627 张图片，4 个病害类别），系统对比了迁移学习中三种主流训练策略的效果：<strong>从零训练</strong>、<strong>冻结特征提取</strong>与<strong>微调</strong>，并比较了两种预训练架构（ResNet18 与 MobileNetV2）的表现。</p>
+
+  <div class="metrics">
+    <div class="metric"><div class="value">6,627</div><div class="label">总图片数</div></div>
+    <div class="metric"><div class="value">4</div><div class="label">病害类别</div></div>
+    <div class="metric"><div class="value">99.47%</div><div class="label">最高准确率</div></div>
+    <div class="metric"><div class="value">CPU</div><div class="label">训练设备</div></div>
+  </div>
+
+  <h3>数据集类别分布</h3>
+  <table>
+    <tr><th>类别</th><th>英文名</th><th>图片数</th><th>占比</th></tr>
+    <tr><td>健康叶片</td><td>Healthy</td><td>1,591</td><td>24.0%</td></tr>
+    <tr><td>早疫病</td><td>Early Blight</td><td>1,000</td><td>15.1%</td></tr>
+    <tr><td>晚疫病</td><td>Late Blight</td><td>1,909</td><td>28.8%</td></tr>
+    <tr><td>细菌性斑点病</td><td>Bacterial Spot</td><td>2,127</td><td>32.1%</td></tr>
+  </table>
+
+</section>
+
+<!-- ===== 2. 任务 A ===== -->
+<section class="card">
+  <h2>2. 任务 A — 迁移学习基础：冻结特征提取</h2>
+
+  <h3>实验设置</h3>
+  <ul>
+    <li><strong>模型</strong>：ResNet18（ImageNet 预训练权重）</li>
+    <li><strong>策略</strong>：冻结所有卷积层参数，仅训练新替换的全连接分类头</li>
+    <li><strong>可训练参数</strong>：2,052 / 11,178,564 (0.02%)</li>
+    <li><strong>优化器</strong>：Adam，学习率 0.001</li>
+    <li><strong>训练轮数</strong>：5 epochs</li>
+  </ul>
+
+  <div class="metrics">
+    <div class="metric"><div class="value">96.00%</div><div class="label">最佳验证准确率</div></div>
+    <div class="metric"><div class="value">921s</div><div class="label">训练时间</div></div>
+    <div class="metric"><div class="value">2,052</div><div class="label">可训练参数</div></div>
+    <div class="metric"><div class="value">0.02%</div><div class="label">参数利用率</div></div>
+  </div>
+
+  <div class="figure">
+    <img src="output/task_a_feature_extraction.png" alt="Task A: Feature Extraction Results">
+    <div class="caption">图 1: 任务 A — 冻结特征提取的训练损失与验证准确率曲线</div>
+  </div>
+
+  <div class="conclusion">
+    <strong>分析</strong>：仅训练 0.02% 的参数即达到 96.00% 的验证准确率，充分展示了迁移学习的威力——预训练模型在 ImageNet 上学到的通用视觉特征（边缘、纹理、形状）可以直接迁移到农业病害识别任务中，大幅降低了训练成本和数据需求。
+  </div>
+</section>
+
+<!-- ===== 3. 任务 B ===== -->
+<section class="card">
+  <h2>3. 任务 B — 微调：解冻更多层提升准确率</h2>
+
+  <h3>实验设置</h3>
+  <ul>
+    <li><strong>模型</strong>：ResNet18（ImageNet 预训练权重）</li>
+    <li><strong>策略</strong>：解冻 layer4（最后一个卷积块）+ 全连接分类头</li>
+    <li><strong>可训练参数</strong>：8,395,780 / 11,178,564 (75.11%)</li>
+    <li><strong>差异化学习率</strong>：layer4 使用 0.0001，fc 层使用 0.001</li>
+    <li><strong>训练轮数</strong>：5 epochs</li>
+  </ul>
+
+  <div class="metrics">
+    <div class="metric"><div class="value">99.47%</div><div class="label">最佳验证准确率</div></div>
+    <div class="metric"><div class="value">1,179s</div><div class="label">训练时间</div></div>
+    <div class="metric"><div class="value">8.4M</div><div class="label">可训练参数</div></div>
+    <div class="metric"><div class="value">+3.47%</div><div class="label">较任务A提升</div></div>
+  </div>
+
+  <div class="figure">
+    <img src="output/task_b_comparison.png" alt="Task B: Fine-tuning Comparison">
+    <div class="caption">图 2: 任务 B — 特征提取 vs 微调的损失曲线与最佳准确率对比</div>
+  </div>
+
+  <div class="conclusion">
+    <strong>分析</strong>：微调将准确率从 96.00% 提升至 99.47%（+3.47 个百分点），误差率从 4.00% 降至 0.53%——<strong>相对错误率降低了 86.8%</strong>。关键技巧是使用差异化学习率：底层特征（边缘、纹理）是通用的，变化较小；高层特征（语义、类别判别）需要更多调整来适应新任务。
+  </div>
+</section>
+
+<!-- ===== 4. 任务 C ===== -->
+<section class="card">
+  <h2>4. 任务 C — 模型对比：ResNet18 vs MobileNetV2</h2>
+
+  <h3>实验设置</h3>
+  <ul>
+    <li><strong>ResNet18</strong>：11.2M 参数，经典残差网络架构</li>
+    <li><strong>MobileNetV2</strong>：2.2M 参数，轻量级移动端架构</li>
+    <li><strong>策略</strong>：两者均使用冻结特征提取（公平对比）</li>
+    <li><strong>训练轮数</strong>：ResNet18 5 epochs / MobileNetV2 3 epochs</li>
+  </ul>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0;">
+    <div class="metric">
+      <div class="value">96.30%</div>
+      <div class="label">ResNet18 最佳准确率</div>
+      <div style="color: var(--text-light); font-size: 0.85em; margin-top: 4px;">11.2M 参数 · 943s</div>
+    </div>
+    <div class="metric">
+      <div class="value">96.08%</div>
+      <div class="label">MobileNetV2 最佳准确率</div>
+      <div style="color: var(--text-light); font-size: 0.85em; margin-top: 4px;">2.2M 参数 · 613s</div>
+    </div>
+  </div>
+
+  <table>
+    <tr><th>指标</th><th>ResNet18</th><th>MobileNetV2</th><th>差异</th></tr>
+    <tr><td>最佳准确率</td><td>96.30%</td><td>96.08%</td><td>−0.22%</td></tr>
+    <tr><td>参数数量</td><td>11.2M</td><td>2.2M</td><td><strong>−80.1%</strong></td></tr>
+    <tr><td>训练时间</td><td>943s</td><td>613s</td><td><strong>−35.0%</strong></td></tr>
+    <tr><td>模型大小（估算）</td><td>~44 MB</td><td>~9 MB</td><td><strong>−79.5%</strong></td></tr>
+  </table>
+
+  <div class="figure">
+    <img src="output/task_c_model_comparison.png" alt="Task C: Model Comparison">
+    <div class="caption">图 3: 任务 C — ResNet18 vs MobileNetV2 准确率曲线与多维度对比</div>
+  </div>
+
+  <div class="conclusion">
+    <strong>分析</strong>：MobileNetV2 以 1/5 的参数量达到了与 ResNet18 几乎相同的准确率（仅差 0.22%），同时训练速度提升 35%。这证明了轻量级架构在农业病害识别任务中具有极高的性价比，特别适合部署在田间移动设备或嵌入式系统上。
+  </div>
+</section>
+
+<!-- ===== 5. 任务 D ===== -->
+<section class="card">
+  <h2>5. 任务 D — 综合对比：三种训练策略大比拼</h2>
+
+  <h3>实验设置</h3>
+  <ul>
+    <li><strong>方案 1（从零训练）</strong>：ResNet18 随机初始化，训练所有 11.2M 参数</li>
+    <li><strong>方案 2（冻结特征提取）</strong>：ResNet18 ImageNet 预训练，仅训练分类头</li>
+    <li><strong>方案 3（微调）</strong>：ResNet18 ImageNet 预训练，解冻 layer4 + 分类头</li>
+    <li><strong>训练轮数</strong>：各 3 epochs（统一对比）</li>
+  </ul>
+
+  <div class="metrics">
+    <div class="metric"><div class="value">91.48%</div><div class="label">从零训练</div></div>
+    <div class="metric"><div class="value">95.25%</div><div class="label">冻结特征提取</div></div>
+    <div class="metric"><div class="value">99.10%</div><div class="label">微调</div></div>
+    <div class="metric"><div class="value">+7.62%</div><div class="label">微调 vs 从零</div></div>
+  </div>
+
+  <table>
+    <tr><th>方案</th><th>最佳准确率</th><th>训练时间</th><th>可训练参数</th><th>效率评分*</th></tr>
+    <tr><td>从零训练 (Scratch)</td><td>91.48%</td><td>1,298s</td><td>11.2M (100%)</td><td>★☆☆☆☆</td></tr>
+    <tr><td>冻结特征提取 (Frozen)</td><td>95.25%</td><td>569s</td><td>2,052 (0.02%)</td><td>★★★★☆</td></tr>
+    <tr><td class="highlight">微调 (Fine-tuning)</td><td class="highlight">99.10%</td><td>725s</td><td>8.4M (75%)</td><td>★★★★★</td></tr>
+  </table>
+  <p style="font-size: 0.85em; color: var(--text-light);">* 效率评分综合考虑准确率、训练时间和参数效率</p>
+
+  <div class="figure">
+    <img src="output/task_d_final_comparison.png" alt="Task D: Final Comparison">
+    <div class="caption">图 4: 任务 D — 三种训练策略的准确率柱状图、损失曲线与收敛速度对比</div>
+  </div>
+
+  <div class="conclusion" style="margin-bottom: 16px;">
+    <strong>核心发现</strong>：仅 3 个 epoch 内，微调策略就以 99.10% 的准确率远超从零训练（91.48%），同时训练时间仅为从零训练的 56%。这深刻说明了迁移学习的价值——预训练权重提供了一个极好的参数初始化，模型无需从零学习底层视觉特征。
+  </div>
+
+  <div class="figure">
+    <img src="output/summary_dashboard.png" alt="Summary Dashboard">
+    <div class="caption">图 5: 综合仪表盘 — 全部四个任务的训练曲线与对比结果一览</div>
+  </div>
+</section>
+
+<!-- ===== 6. 论文摘要图 ===== -->
+<section class="card">
+  <h2>6. 论文级摘要图</h2>
+  <p>下图以学术论文 Figure 1 的标准格式呈现，包含 (a) 策略对比、(b) 损失曲线、(c) 准确率收敛和 (d) 效率分析四个子图，适合直接用于论文或技术报告。</p>
+  <div class="figure">
+    <img src="output/abstract_figure.png" alt="Abstract Figure">
+    <div class="caption">图 6: 论文级摘要图 — 迁移学习在番茄叶片病害分类中的综合性能基准测试</div>
+  </div>
+</section>
+
+<!-- ===== 7. 综合结论 ===== -->
+<section class="card">
+  <h2>7. 综合结论与关键要点</h2>
+
+  <h3>7.1 核心发现</h3>
+  <ol>
+    <li><strong>迁移学习显著优于从零训练</strong>：仅训练 0.02% 的参数（冻结特征提取）即可达到 95-96% 准确率，远超从零训练的 91.48%。微调进一步将准确率提升至 <strong>99.47%</strong>。</li>
+    <li><strong>微调是性能最优策略</strong>：以适中的计算开销（725s vs 569s），换取了显著的效果提升（+3.85%），是性价比最高的训练方案。</li>
+    <li><strong>轻量级模型潜力巨大</strong>：MobileNetV2 以 1/5 参数量实现了与 ResNet18 几乎持平的准确率（96.08% vs 96.30%），适合边缘设备部署。</li>
+    <li><strong>差异化学习率是关键</strong>：微调时对底层特征使用较小学习率（0.0001），对分类头使用正常学习率（0.001），有效避免了"灾难性遗忘"。</li>
+  </ol>
+
+  <h3>7.2 完整结果汇总</h3>
+  <table>
+    <tr><th>任务</th><th>模型/策略</th><th>最佳准确率</th><th>训练时间</th><th>参数量</th></tr>
+    <tr><td>A — 特征提取</td><td>ResNet18 (Frozen)</td><td>96.00%</td><td>921s</td><td>2,052 / 11.2M</td></tr>
+    <tr><td>B — 微调</td><td>ResNet18 (Fine-tune)</td><td class="highlight">99.47%</td><td>1,179s</td><td>8.4M / 11.2M</td></tr>
+    <tr><td>C — 模型对比</td><td>ResNet18 (Frozen)</td><td>96.30%</td><td>943s</td><td>11.2M</td></tr>
+    <tr><td>C — 模型对比</td><td>MobileNetV2 (Frozen)</td><td>96.08%</td><td>613s</td><td>2.2M</td></tr>
+    <tr><td>D — 综合对比</td><td>ResNet18 Scratch</td><td>91.48%</td><td>1,298s</td><td>11.2M</td></tr>
+    <tr><td>D — 综合对比</td><td>ResNet18 Frozen</td><td>95.25%</td><td>569s</td><td>2,052 / 11.2M</td></tr>
+    <tr><td>D — 综合对比</td><td>ResNet18 Fine-tune</td><td class="highlight">99.10%</td><td>725s</td><td>8.4M / 11.2M</td></tr>
+  </table>
+
+  <h3>7.3 实际部署建议</h3>
+  <table>
+    <tr><th>场景</th><th>推荐方案</th><th>理由</th></tr>
+    <tr><td>云端高精度诊断</td><td>ResNet18 微调</td><td>最高准确率 99.47%</td></tr>
+    <tr><td>移动端/嵌入式设备</td><td>MobileNetV2 微调</td><td>轻量（2.2M）、快速、准确率接近</td></tr>
+    <tr><td>快速原型验证</td><td>ResNet18 冻结特征提取</td><td>最快训练（569s），准确率可接受（95-96%）</td></tr>
+    <tr><td>数据极度稀缺</td><td>冻结特征提取 + 强数据增强</td><td>仅训练少量参数，过拟合风险低</td></tr>
+  </table>
+</section>
+
+</div>
+
+<footer class="footer">
+  <p>迁移学习与农业图像识别 · 综合实验报告 · PlantVillage Tomato Dataset · 2026</p>
+  <p style="margin-top: 4px;">PyTorch · torchvision · matplotlib</p>
+</footer>
+
+</body>
+</html>
