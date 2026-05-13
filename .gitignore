@@ -1,0 +1,20 @@
+# Dataset (large files, download separately)
+data/
+data_download/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# PDFs generated from markdown
+*.pdf
